@@ -1,66 +1,241 @@
-# nodejs-getting-started
+# Node.js Getting Started — Dockerized
 
-A barebones Node.js app using [Express](https://expressjs.com/).
+A simple Node.js web application containerized with Docker as a hands-on DevOps project.
 
-This application supports the tutorials for both the [Cedar and Fir generations](https://devcenter.heroku.com/articles/generations) of the Heroku platform. You can check them out here:
+This project is based on the original [Heroku Node.js Getting Started](https://github.com/heroku/nodejs-getting-started) application.
 
-* [Getting Started on Heroku with Node.js](https://devcenter.heroku.com/articles/getting-started-with-nodejs)
-* [Getting Started on Heroku Fir with Node.js](https://devcenter.heroku.com/articles/getting-started-with-nodejs-fir)
+The main goal of this project is to practice containerizing an existing Node.js application using Docker and applying basic container best practices.
 
-## Running Locally
+---
 
-Make sure you have [Node.js](http://nodejs.org/) and the [Heroku CLI](https://cli.heroku.com/) installed.
+## Project Overview
 
-```sh
-$ git clone https://github.com/heroku/nodejs-getting-started.git # or clone your own fork
-$ cd nodejs-getting-started
-$ npm install
-$ npm start
+The original Node.js application was taken and Dockerized without changing its core functionality.
+
+This project demonstrates:
+
+- Writing a Dockerfile for a Node.js application
+- Building a Docker image
+- Running the application inside a container
+- Managing container ports
+- Using `.dockerignore`
+- Installing dependencies with `npm ci`
+- Running the application as a non-root user
+- Verifying the application through container logs and HTTP requests
+
+---
+
+## Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| Node.js | Runtime environment |
+| Express | Web framework |
+| Docker | Application containerization |
+| npm | Dependency management |
+| Git / GitHub | Version control |
+
+---
+
+## Docker Configuration
+
+The project uses:
+
+```text
+node:24-bookworm-slim
 ```
 
-Your app should now be running on [localhost:5006](http://localhost:5006/).
+as the base image.
 
-## Deploying to Heroku
+The Dockerfile:
 
-Using resources for this example app counts towards your usage. [Delete your app](https://devcenter.heroku.com/articles/heroku-cli-commands#heroku-apps-destroy) and [database](https://devcenter.heroku.com/articles/heroku-postgresql#removing-the-add-on) as soon as you are done experimenting to control costs.
+1. Uses a lightweight Node.js base image
+2. Sets `/app` as the working directory
+3. Copies `package.json` and `package-lock.json`
+4. Installs dependencies using `npm ci`
+5. Copies the application source code
+6. Runs the application as the `node` user
+7. Exposes port `5006`
+8. Starts the application with `npm start`
 
-### Deploy on [Cedar][cedar]
+---
 
-By default, apps use Eco dynos on [Cedar][cedar] if you are subscribed to Eco. Otherwise, it defaults to Basic dynos. The 
-Eco dynos plan is shared across all Eco dynos in your account and is recommended if you plan on deploying many small apps 
-to Heroku. Learn more about our low-cost plans [here](https://blog.heroku.com/new-low-cost-plans).
+## Project Structure
 
-Eligible students can apply for platform credits through our new [Heroku for GitHub Students program](https://blog.heroku.com/github-student-developer-program).
-
-```
-$ heroku create
-$ git push heroku main
-$ heroku open
-```
-
-### Deploy on [Fir][fir]
-
-By default, apps on [Fir][fir] use 1X-Classic dynos. To create an app on [Fir][fir] you'll need to 
-[create a private space](https://devcenter.heroku.com/articles/working-with-private-spaces#create-a-private-space)
-first.
-
-```
-$ heroku spaces:create <space-name> --team <team-name> --generation fir
-$ heroku create --space <space-name>
-$ git push heroku main
-$ heroku open
+```text
+.
+├── Dockerfile
+├── .dockerignore
+├── .gitignore
+├── package.json
+├── package-lock.json
+├── index.js
+├── public/
+├── views/
+└── README.md
 ```
 
-## Documentation
+---
 
-For more information about using Node.js on Heroku, see these Dev Center articles:
+## Run with Docker
 
-- [Getting Started on Heroku with Node.js](https://devcenter.heroku.com/articles/getting-started-with-nodejs)
-- [Getting Started on Heroku Fir with Node.js](https://devcenter.heroku.com/articles/getting-started-with-nodejs-fir)
-- [Heroku Node.js Support](https://devcenter.heroku.com/articles/nodejs-support)
-- [Node.js on Heroku](https://devcenter.heroku.com/categories/nodejs)
-- [Best Practices for Node.js Development](https://devcenter.heroku.com/articles/node-best-practices)
-- [Using WebSockets on Heroku with Node.js](https://devcenter.heroku.com/articles/node-websockets)
+### Build the Docker Image
 
-[cedar]: https://devcenter.heroku.com/articles/generations#cedar
-[fir]: https://devcenter.heroku.com/articles/generations#fir
+```bash
+docker build -t nodejs-getting-started .
+```
+
+### Run the Container
+
+```bash
+docker run -d \
+  --name nodejs-app \
+  -p 5006:5006 \
+  nodejs-getting-started
+```
+
+### Verify the Container
+
+```bash
+docker ps
+```
+
+### Open the Application
+
+```text
+http://localhost:5006
+```
+
+Or test it with:
+
+```bash
+curl http://localhost:5006
+```
+
+### View Container Logs
+
+```bash
+docker logs nodejs-app
+```
+
+Expected output includes:
+
+```text
+Listening on 5006
+```
+
+---
+
+## Container Management
+
+### Stop the Container
+
+```bash
+docker stop nodejs-app
+```
+
+### Remove the Container
+
+```bash
+docker rm nodejs-app
+```
+
+### List Docker Images
+
+```bash
+docker images
+```
+
+---
+
+## Run Without Docker
+
+To run the application locally:
+
+```bash
+npm install
+npm start
+```
+
+Then open:
+
+```text
+http://localhost:5006
+```
+
+---
+
+## `.dockerignore`
+
+The project uses `.dockerignore` to exclude unnecessary files from the Docker build context.
+
+Current exclusions:
+
+```text
+node_modules
+.git
+.env
+npm-debug.log
+```
+
+This helps keep the build context smaller and prevents unnecessary files from being sent during the Docker build.
+
+---
+
+## Dockerfile
+
+```dockerfile
+FROM node:24-bookworm-slim
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm ci
+
+COPY . .
+
+USER node
+
+EXPOSE 5006
+
+CMD ["npm", "start"]
+```
+
+---
+
+## What I Practiced
+
+Through this project I practiced:
+
+- Dockerfile instructions
+- Docker build context
+- Docker image layers and caching
+- Docker images and containers
+- Port mapping
+- Container logs
+- `.dockerignore`
+- Dependency installation with `npm ci`
+- Running containers as a non-root user
+- Git and GitHub workflow
+
+---
+
+## Original Project
+
+This project is based on:
+
+https://github.com/heroku/nodejs-getting-started
+
+The Docker configuration and containerization work were added as part of this project.
+
+---
+
+## Author
+
+**Mahmoud Moustafa**
+
+Computer Science Student | Aspiring DevOps Engineer
+
+GitHub:  
+https://github.com/mahmoudmoustafa-coder
